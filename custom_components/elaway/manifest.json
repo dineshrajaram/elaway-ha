@@ -1,13 +1,13 @@
 {
   "domain": "elaway",
   "name": "Elaway",
-  "version": "0.2.0",
-  "config_flow": true,
-  "documentation": "https://github.com/dineshrajaram/elaway-ha",
-  "issue_tracker": "https://github.com/dineshrajaram/elaway-ha/issues",
-  "iot_class": "cloud_polling",
-  "integration_type": "device",
   "codeowners": ["@dineshrajaram"],
+  "config_flow": true,
   "dependencies": [],
-  "requirements": []
+  "documentation": "https://github.com/dineshrajaram/elaway-ha",
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/dineshrajaram/elaway-ha/issues",
+  "requirements": [],
+  "version": "0.2.0"
 }
