@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Elaway",
+        "description": "Paste your AMPECO refresh token. Your charger(s) are discovered automatically. The token is single-use and rotates on validation, so paste the current value — and don't run another tool/script that refreshes the same token.",
+        "data": {
+          "refresh_token": "Refresh token",
+          "client_id": "Client ID",
+          "client_secret": "Client secret",
+          "scan_interval": "Poll interval (seconds)"
+        }
+      },
+      "select": {
+        "title": "Select charger",
+        "description": "Choose the charger to add.",
+        "data": {
+          "charge_point_id": "Charger"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "The refresh token was rejected. Paste the current, valid token.",
+      "cannot_connect": "Could not reach the Elaway API. Check connectivity and try again.",
+      "no_charge_point": "No chargers were found on this account."
+    },
+    "abort": {
+      "already_configured": "This charger is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Elaway options",
+        "data": {
+          "scan_interval": "Poll interval (seconds)"
+        }
+      }
+    }
+  }
+}

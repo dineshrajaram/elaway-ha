@@ -1,0 +1,30 @@
+# === Secrets / tokens — NEVER commit ===
+tokens.json
+**/secrets.yaml
+
+# === Reverse-engineering captures (contain tokens + personal data) ===
+*.flows
+auth_flow.json
+charging_session.json
+extract_auth_flows.py
+extract_flows.py
+
+# === Personal API reference (account IDs, name, client secret) ===
+ELAWAY_API_REFERENCE.md
+
+# === Local dev / workflow (not part of the published integration) ===
+.claude/
+.idea/
+openspec/
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# === OS ===
+.DS_Store
+Thumbs.db
