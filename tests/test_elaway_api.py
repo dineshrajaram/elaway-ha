@@ -221,6 +221,35 @@ class TestParseChargerState(unittest.TestCase):
         self.assertFalse(st["is_charging"])
         self.assertEqual(st["evse_status"], "suspended")
 
+    def test_suspended_session_id_from_status(self):
+        # Real shape: /session/ongoing is empty while suspended, but the charger
+        # status carries the session id under evses[0].session.id. It must be
+        # surfaced so the switch can stop a suspended (car-full) session.
+        cp = {
+            "data": {
+                "evses": [
+                    {
+                        "status": "suspended",
+                        "connectors": [{"status": "active"}],
+                        "session": {"id": "6702499", "startedAt": "x"},
+                    }
+                ]
+            }
+        }
+        st = api.parse_charger_state(cp, [])
+        self.assertEqual(st["session_id"], "6702499")
+        self.assertTrue(st["is_suspended"])
+        self.assertFalse(st["is_charging"])
+
+    def test_ongoing_session_id_preferred(self):
+        st = api.parse_charger_state(self.FINISHING, [{"id": "999"}])
+        self.assertEqual(st["session_id"], "999")
+
+    def test_no_session_id_when_idle(self):
+        cp = {"data": {"evses": [{"status": "available", "connectors": []}]}}
+        st = api.parse_charger_state(cp, [])
+        self.assertIsNone(st["session_id"])
+
     def test_missing_evses_unavailable(self):
         st = api.parse_charger_state({"data": {}}, [])
         self.assertEqual(st["evse_status"], const.STATUS_UNAVAILABLE)

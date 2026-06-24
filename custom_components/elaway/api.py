@@ -64,6 +64,7 @@ def parse_charger_state(charge_point: dict[str, Any] | None, ongoing: list | Non
     suspendedEV) with the cable in `data.evses[0].connectors[0].status`.
 
     Returns: evse_status (raw, lowercased — the sensor value), connector_status,
+    session_id (from ongoing or, when suspended, the charger status),
     is_charging, is_connected, is_ready (connected and not charging), is_rebooting.
     """
     cp = charge_point or {}
@@ -74,11 +75,26 @@ def parse_charger_state(charge_point: dict[str, Any] | None, ongoing: list | Non
     connectors = evse.get("connectors") or []
     connector_status = str(connectors[0].get("status") or "").lower() if connectors else ""
 
-    has_session = bool(ongoing)
-    is_charging = has_session or evse_status == "charging"
-    is_suspended = (not is_charging) and evse_status in _SUSPENDED_STATES
+    # The session id can come from /session/ongoing (only populated while power
+    # is actively flowing) OR from the charger status itself under
+    # evses[0].session.id — the latter survives a *suspended* session (car full),
+    # which /session/ongoing drops. Prefer ongoing, fall back to status.
+    evse_session = evse.get("session") or {}
+    session_id = None
+    if ongoing:
+        session_id = ongoing[0].get("id")
+    if session_id is None:
+        session_id = evse_session.get("id")
+    session_id = str(session_id) if session_id is not None else None
+
+    has_session = session_id is not None
+    # Suspended is a charger-reported fact (vehicle connected, charging paused —
+    # e.g. car full); independent of whether we resolved a session id.
+    is_suspended = evse_status in _SUSPENDED_STATES
+    # Charging = actively drawing power, or a live (non-suspended) session exists.
+    is_charging = evse_status == "charging" or (has_session and not is_suspended)
     # Connected = a vehicle is engaged but not (necessarily) charging.
-    is_connected = is_charging or evse_status in _CONNECTED_STATES
+    is_connected = is_charging or is_suspended or evse_status in _CONNECTED_STATES
     # Startable = connected, not already charging, and not suspended (car full).
     is_ready = is_connected and not is_charging and not is_suspended
 
@@ -88,6 +104,7 @@ def parse_charger_state(charge_point: dict[str, Any] | None, ongoing: list | Non
     return {
         "evse_status": evse_status or STATUS_UNAVAILABLE,
         "connector_status": connector_status,
+        "session_id": session_id,
         "is_charging": is_charging,
         "is_connected": is_connected,
         "is_suspended": is_suspended,

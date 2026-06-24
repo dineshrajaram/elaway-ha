@@ -55,7 +55,10 @@ class ElawayChargingSwitch(CoordinatorEntity[ElawayCoordinator], SwitchEntity):
 
     @property
     def is_on(self) -> bool:
-        return bool(self._data.get("is_charging"))
+        # On while a session is running — charging *or* suspended (car full).
+        # Suspended must count as "on" so the user can turn it off; the AMPECO
+        # session stays open until explicitly ended.
+        return bool(self._data.get("is_charging") or self._data.get("is_suspended"))
 
     @property
     def available(self) -> bool:
@@ -70,7 +73,7 @@ class ElawayChargingSwitch(CoordinatorEntity[ElawayCoordinator], SwitchEntity):
         return {
             "evse_status": self._data.get("evse_status"),
             "ready_to_start": self._data.get("is_ready"),
-            "session_id": session.get("id"),
+            "session_id": session.get("id") or self._data.get("session_id"),
             "started_at": session.get("startedAt"),
         }
 
@@ -103,13 +106,16 @@ class ElawayChargingSwitch(CoordinatorEntity[ElawayCoordinator], SwitchEntity):
         self._schedule_followups()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
+        # /session/ongoing is empty while suspended (car full), so fall back to
+        # the session id resolved from the charger status by the coordinator.
         ongoing = await self.coordinator.api.async_get_ongoing()
-        if not ongoing:
+        session_id = ongoing[0]["id"] if ongoing else self._data.get("session_id")
+        if not session_id:
             # Nothing to stop (e.g. already unplugged); just reconcile state.
             await self.coordinator.async_request_refresh()
             return
         try:
-            await self.coordinator.api.async_stop(ongoing[0]["id"])
+            await self.coordinator.api.async_stop(session_id)
         except ElawayApiError as err:
             raise HomeAssistantError(f"Could not stop charging: {err}") from err
         await self.coordinator.async_request_refresh()
