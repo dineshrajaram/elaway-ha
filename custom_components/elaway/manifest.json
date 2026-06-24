@@ -1,7 +1,7 @@
 {
   "domain": "elaway",
   "name": "Elaway",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "config_flow": true,
   "documentation": "https://github.com/dineshrajaram/elaway-ha",
   "issue_tracker": "https://github.com/dineshrajaram/elaway-ha/issues",
